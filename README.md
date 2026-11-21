@@ -14,17 +14,24 @@ In Claude Code (v2.1.275 or later):
 /plugin install ordewell --marketplace ordewell/ordewell-claude-plugin
 ```
 
-Or from your shell:
+Or from your shell (v2.1.292 or later):
 
 ```
 claude plugin install ordewell --marketplace ordewell/ordewell-claude-plugin
 ```
 
-On an older Claude Code, add the marketplace first, then install:
+On an older Claude Code, add the marketplace first, then install. In Claude Code:
 
 ```
 /plugin marketplace add ordewell/ordewell-claude-plugin
 /plugin install ordewell@ordewell
+```
+
+Or from your shell:
+
+```
+claude plugin marketplace add ordewell/ordewell-claude-plugin
+claude plugin install ordewell@ordewell
 ```
 
 The plugin drives the `ordewell` command-line tool, version 0.14.5 or later. If it isn't installed, `/ordewell:plan` offers to install the latest release and runs the installer only if you say yes:
@@ -33,7 +40,7 @@ The plugin drives the `ordewell` command-line tool, version 0.14.5 or later. If 
 - Alpine and other musl-based Linux: `npm install -g ordewell` (Node.js 20.3 or later). The standalone binary needs glibc.
 - Windows: `npm install -g ordewell` (Node.js 20.3 or later). Git for Windows is required.
 
-If your `ordewell` is older than 0.14.5, `ordewell update` upgrades it the way it was installed.
+If your `ordewell` is older than 0.14.5, `/ordewell:plan` offers to upgrade it, and runs the upgrade only if you say yes. `ordewell update` upgrades it the way it was installed, from version 0.13.0. An older version has no `ordewell update`: run its install command again (the curl installer, `brew upgrade ordewell` or `npm install -g ordewell`).
 
 ## Use
 
@@ -76,18 +83,19 @@ The plugin is two skills: text instructions that Claude follows. It has no hooks
 - `command -v ordewell`, `test -x ~/.local/bin/ordewell` and `ordewell --version`, to find the tool;
 - with your consent only, the installer above, which downloads Ordewell from ordewell.ai and GitHub Releases, or from npm;
 - `git rev-parse --is-inside-work-tree`, to tell whether the folder is a git repository;
-- `ordewell planner` and `ordewell runners`, which list the planner and the agents. The first `ordewell` command that needs it starts Ordewell's local server (port 3742 on 127.0.0.1), usually `ordewell planner`, and the server stays running. If no planner is chosen yet, `ordewell planner claude-code`, which saves Claude Code as the planner in Ordewell's settings;
+- `env -u CLAUDECODE -u CLAUDE_CODE_SESSION_ID ... ordewell web --daemon`, at the start of `/ordewell:plan` and `/ordewell:run`, which starts Ordewell's local server (port 3742 on 127.0.0.1) without the Claude Code session's own variables, or leaves a running server as it is. The server stays running;
+- `ordewell planner` and `ordewell runners`, which list the planner and the agents. If no planner is chosen yet, `ordewell planner claude-code`, which saves Claude Code as the planner in Ordewell's settings;
 - `ordewell plan --goal="..." --no-chat`, which starts a planner session of your own coding agent, which reads the repository and changes nothing in it;
-- `ordewell status --session-id <id> --output .ordewell/plugin-plan.json`, which writes the plan as JSON into Ordewell's own folder, and `grep` on that file, so that Claude can read which agent runs each task;
+- `ordewell status --session-id <id> --output .ordewell/plugin-plan-<id>.json`, which writes the plan as JSON to a file named for the plan's session in Ordewell's own folder, and `grep` on that file, so that Claude can read which agent runs each task;
 - `ordewell run --unattended`, which starts the tasks: agent sessions of Claude Code, Codex or the other agents in the plan, on your own logins, each in a git worktree under `.ordewell/worktrees/`. If your working tree has uncommitted changes, and you agree, `ordewell run --unattended --stash`, which stashes your tracked changes first: `git stash pop` brings them back;
-- `ordewell status` and `ordewell merge review`, which only read;
-- only when you ask for it or agree to it: `ordewell runners <id> on`, the plan edits (`ordewell task-runner`, `ordewell task-model`, `ordewell task-effort`, `ordewell task-deps`, `ordewell add-task`, `ordewell remove-task`), and the answers to a waiting run (`ordewell checkpoint`, `ordewell cancel`, `ordewell retry`, and the others the run names).
+- `ordewell status`, without `--output`, and `ordewell merge review`, which only read;
+- only when you ask for it or agree to it: an upgrade of an `ordewell` older than 0.14.5, `ordewell runners <id> on`, the plan edits (`ordewell task-runner`, `ordewell task-model`, `ordewell task-effort`, `ordewell task-deps`, `ordewell add-task`, `ordewell remove-task`), and the answers to a waiting or failed run (`ordewell checkpoint`, `ordewell cancel`, `ordewell retry`, `ordewell skip`, and the others the run names).
 
-The skills tell Claude never to pass `--yes`, never to turn on Ordewell's Full mode, autorun or automerge, and never to run `ordewell merge` or `ordewell merge discard`: merging is yours. The skills pre-approve only the read-only commands above, and only in the turn you invoke them; your Claude Code permission settings decide every other command. In Manual mode Claude Code asks you first. In auto mode, which Claude Code v2.1.283 and later starts interactive sessions in, a classifier model decides instead of asking you, so the installer, `ordewell plan` and `ordewell run` can run without a prompt. There, the only check before the installer runs is the skill's rule that Claude asks you in the conversation and installs nothing without your yes. Press Shift+Tab to switch modes.
+The skills tell Claude never to pass `--yes`, never to turn on Ordewell's Full mode, autorun or automerge, and never to run `ordewell merge` or `ordewell merge discard`: merging is yours. The skills pre-approve the commands that find the tool, `git rev-parse`, the `ordewell web --daemon` line above, `ordewell planner`, `ordewell runners`, `ordewell status` and `ordewell merge review`, and only in the turn in which you type `/ordewell:plan` or `/ordewell:run`. All of them only read except two: `ordewell web --daemon` starts the server, and `ordewell status` with `--output` writes the file it names, replacing any file there, with no question asked. The skills name only the `.ordewell/plugin-plan-<id>.json` file, but the pre-approval covers any path. Your Claude Code permission settings decide every other command, and every command in a later turn, such as your reply to a question Claude asks. In Manual mode Claude Code asks you first, and in a later turn it asks for these commands too: type `/ordewell:plan` or `/ordewell:run` again to have them run without asking. In auto mode, which Claude Code v2.1.283 and later starts interactive sessions in, a classifier model decides instead of asking you, so the installer, `ordewell plan` and `ordewell run` can run without a prompt. There, the only check before the installer runs is the skill's rule that Claude asks you in the conversation and installs nothing without your yes. Press Shift+Tab to switch modes.
 
 Ordewell keeps its state in `~/.ordewell` and in `.ordewell/` in your project, where the `.gitignore` it writes keeps that state out of git. Its server stays running after a run; `ordewell stop --server` stops it. When Ordewell prints its one-time notice about its daily version check, Claude shows it to you. What the `ordewell` tool itself sends, a daily version check to ordewell.ai and a public model catalog read from models.dev, is described under [What Ordewell sends](https://github.com/ordewell/ordewell#what-ordewell-sends), with the settings that turn each off. Your coding agents talk to their own providers as they always do.
 
-Ordewell's server keeps the environment it was started with, and passes it on to the agent sessions it starts. Started by this plugin from inside Claude Code, that environment includes the starting Claude Code session's variables, such as `CLAUDE_CODE_SESSION_ID` and its messaging socket and token, so the Claude Code sessions Ordewell starts for planning and tasks, even for a later session, inherit them and record that first session as their parent. Ordewell 0.14.5 doesn't remove them. To avoid it, start the server from your own terminal before using the plugin, with `ordewell web --daemon` (run `ordewell stop --server` first if it is already running).
+Ordewell's server keeps the environment it was started with, and passes it on to the agent sessions it starts. Of Claude Code's variables, Ordewell 0.14.5 removes only `CLAUDECODE` before it starts an agent session, so a server started by an `ordewell` command run inside Claude Code would pass on that session's variables, such as `CLAUDE_CODE_SESSION_ID` and its messaging socket and token, and the Claude Code sessions Ordewell starts for planning and tasks, even for a later session, would record that first session as their parent. That is why the skills start the server themselves, with `env -u` and these eleven names: `CLAUDECODE`, `CLAUDE_CODE_SESSION_ID`, `CLAUDE_CODE_MESSAGING_SOCKET`, `CLAUDE_CODE_MESSAGING_TOKEN`, `CLAUDE_CODE_CHILD_SESSION`, `CLAUDE_CODE_CHILD_NOTES_DIR`, `CLAUDE_CODE_ENTRYPOINT`, `CLAUDE_CODE_EXECPATH`, `CLAUDE_CODE_SESSION_ATTENDED`, `CLAUDE_EFFORT` and `CLAUDE_PID`. Two limits remain. A server that is already running keeps the environment it had: if it was started from inside Claude Code some other way, such as by an earlier version of this plugin, run `ordewell stop --server` when no run is going, and the next `/ordewell:plan` starts a clean one. And a variable that a later Claude Code version adds isn't on that list. To be sure, start the server from your own terminal, outside Claude Code, with `ordewell web --daemon`.
 
 If Claude Code's sandbox is on, `ordewell` can't run inside it, because it starts agent sessions of its own. Add `"excludedCommands": ["ordewell *"]` to the `sandbox` block of your Claude Code settings, or run the `ordewell` commands in your own terminal.
 

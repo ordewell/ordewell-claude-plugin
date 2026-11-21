@@ -2,7 +2,7 @@
 description: Run the Ordewell plan you reviewed. Its tasks run side by side, each in its own agent session on its own git worktree, and nothing is merged into your branch.
 argument-hint: [session-id]
 disable-model-invocation: true
-allowed-tools: Bash(command -v ordewell) Bash(ordewell --version) Bash(ordewell status) Bash(ordewell status *) Bash(ordewell merge review) Bash(ordewell merge review *) Bash(~/.local/bin/ordewell --version) Bash(~/.local/bin/ordewell status) Bash(~/.local/bin/ordewell status *) Bash(~/.local/bin/ordewell merge review) Bash(~/.local/bin/ordewell merge review *)
+allowed-tools: Bash(command -v ordewell) Bash(ordewell --version) Bash(env -u CLAUDECODE -u CLAUDE_CODE_SESSION_ID -u CLAUDE_CODE_MESSAGING_SOCKET -u CLAUDE_CODE_MESSAGING_TOKEN -u CLAUDE_CODE_CHILD_SESSION -u CLAUDE_CODE_CHILD_NOTES_DIR -u CLAUDE_CODE_ENTRYPOINT -u CLAUDE_CODE_EXECPATH -u CLAUDE_CODE_SESSION_ATTENDED -u CLAUDE_EFFORT -u CLAUDE_PID ordewell web --daemon) Bash(ordewell status) Bash(ordewell status *) Bash(ordewell merge review) Bash(ordewell merge review *) Bash(~/.local/bin/ordewell --version) Bash(env -u CLAUDECODE -u CLAUDE_CODE_SESSION_ID -u CLAUDE_CODE_MESSAGING_SOCKET -u CLAUDE_CODE_MESSAGING_TOKEN -u CLAUDE_CODE_CHILD_SESSION -u CLAUDE_CODE_CHILD_NOTES_DIR -u CLAUDE_CODE_ENTRYPOINT -u CLAUDE_CODE_EXECPATH -u CLAUDE_CODE_SESSION_ATTENDED -u CLAUDE_EFFORT -u CLAUDE_PID ~/.local/bin/ordewell web --daemon) Bash(~/.local/bin/ordewell status) Bash(~/.local/bin/ordewell status *) Bash(~/.local/bin/ordewell merge review) Bash(~/.local/bin/ordewell merge review *)
 ---
 
 # Run an Ordewell plan
@@ -28,7 +28,15 @@ Run `command -v ordewell`. If it prints a path, write `ordewell` in every comman
 
 ## 2. Start the run
 
-Run this in the foreground with the Bash tool's longest timeout, 600000 milliseconds:
+First run this, exactly as written, with `~/.local/bin/ordewell` in place of `ordewell` if step 1 chose it:
+
+```
+env -u CLAUDECODE -u CLAUDE_CODE_SESSION_ID -u CLAUDE_CODE_MESSAGING_SOCKET -u CLAUDE_CODE_MESSAGING_TOKEN -u CLAUDE_CODE_CHILD_SESSION -u CLAUDE_CODE_CHILD_NOTES_DIR -u CLAUDE_CODE_ENTRYPOINT -u CLAUDE_CODE_EXECPATH -u CLAUDE_CODE_SESSION_ATTENDED -u CLAUDE_EFFORT -u CLAUDE_PID ordewell web --daemon
+```
+
+It starts Ordewell's local server if it isn't running, or prints "Server already running" and leaves the running one as it is. The server passes its environment on to the task sessions it starts, and `env -u` keeps this Claude Code session's own variables, its session id and its messaging socket and token among them, out of it. Don't run it any other way, and don't print or show the environment. Run it alone, and wait for it to finish before any other `ordewell` command: an `ordewell` command run beside it may start the server itself, with this session's variables.
+
+Then run this in the foreground with the Bash tool's longest timeout, 600000 milliseconds:
 
 ```
 ordewell run --unattended [--session-id <id>]
@@ -51,6 +59,13 @@ Report from the output, not from what you expect it to say. The exit status mean
 
 For `0` or `2`, give the `Done.` line with its counts, each failed or blocked task with the reason as printed, and the `Run finished on <branch>` line.
 
+For each failed or blocked task, give its reason and offer these next steps, with their commands written out, and run one only if the user asks for it or agrees:
+
+- `ordewell retry <n>` starts the task again. If the reason points at its agent or model, `ordewell task-runner <n> <runner>` or `ordewell task-model <n> <model>` first changes them. Then `ordewell run --unattended`, as in step 2, runs it and follows it.
+- `ordewell skip <n>` ends the task without landing its work, and lets the tasks that wait for it go ahead: follow it with `ordewell run --unattended` too.
+
+Then go on to step 4 for the work that did land.
+
 For `3`, give each line that says what waits ("Checkpoint", "Waiting for input", "Waiting for approval", "On hold", "Waits on a person") and the command the output names to answer it. Ask the user what to do, and run their answer only when they give it:
 
 - A checkpoint: `ordewell checkpoint <n> approve` takes no text, and says only yes. To give the task an answer or an instruction, such as the user's reply to its question, run `ordewell checkpoint <n> reject "<the user's answer>"`: the task is told that text and goes on with it. The CLI writes this as `approve|reject [reason]`; the reason goes with `reject` only.
@@ -65,13 +80,17 @@ For `3`, give each line that says what waits ("Checkpoint", "Waiting for input",
 
 Then follow the run on by running `ordewell run --unattended` again, the same way as in step 2: on a run that is still going it joins the run and reports from there, and on one that has ended since, it exits `1` with "Every task has already completed: there is nothing left to run". In that case, `ordewell status --session-id <id>` shows how each task ended.
 
-For `1`, show the error as printed. "Every task has already completed" means nothing was left for `ordewell run` to start: manual tasks are never started by it, and `ordewell tui`, in the user's own terminal, works through them.
+For `1`, show the error as printed. "Every task has already completed" means nothing was left for `ordewell run` to start: manual tasks are never started by it, and `ordewell tui`, in the user's own terminal, works through them. When every task has completed, go on to step 4: the run's work may still wait for review.
+
+### Answers in a later turn
+
+This skill's read-only commands run without asking only in the turn in which the user typed `/ordewell:run`. When you run the user's answer in their reply, such as a checkpoint answer, a `--stash` yes, a retry or the sign-in steps, Claude Code's permission settings decide every command in that turn, `ordewell status` and `ordewell merge review` included. If one of them is refused, say so, and don't describe the run's diff from the task lines or handoffs in its place: tell the user to type `/ordewell:run`, which joins the run, or, once it has ended, goes on to the review, with these commands running without asking.
 
 ## 4. Review: the user lands the work
 
 If the output has no `Run finished on <branch>` line because the folder isn't a git repository (the run says "Not a git repository: tasks run in the workspace root without worktree isolation"), the tasks have already edited the files in this folder. Say so, name the files the task lines report, and don't run `ordewell merge review`: there is no run branch, and nothing to merge or discard.
 
-Otherwise Ordewell keeps the run's work on its own branch, the one the `Run finished on <branch>` line names, and the user's branch is unchanged. When the run has landed work, run `ordewell merge review`, which only reads: it prints the diff of that branch against the user's. Summarise which files changed and how, then tell the user how to land it themselves, in their own terminal:
+Otherwise Ordewell keeps the run's work on its own branch, the one the `Run finished on <branch>` line names, and the user's branch is unchanged. When the run has landed work, or every task had already completed, run `ordewell merge review`, which only reads: it prints the diff of that branch against the user's. Summarise which files changed and how, then tell the user how to land it themselves, in their own terminal:
 
 - `ordewell merge` merges the run into their branch, and asks first;
 - `ordewell merge discard` drops it, and asks first;
