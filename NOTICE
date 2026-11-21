@@ -13,7 +13,7 @@ The Apache License grants rights to the *software*. It does not grant rights to
 the project's identity, and Section 6 of that License explicitly withholds them.
 
 The name "Ordewell", the Ordewell wordmark, and the Ordewell logos — including
-the image file distributed as `assets/ordewell-icon.png` — are not licensed
+the image file distributed as assets/ordewell-icon.png — are not licensed
 under Apache-2.0 and remain the property of Alessandro Costanzo Ciano.
 
 You may:
@@ -30,6 +30,6 @@ You may not, without written permission:
   - Use them as, or as part of, your own product name, company name, domain
     name, or logo.
 
-If you fork and rebrand, replace `assets/ordewell-icon.png` and change the
+If you fork and rebrand, replace assets/ordewell-icon.png and change the
 plugin's name. If you are unsure whether a use is fine, ask — the answer is
 usually yes.
