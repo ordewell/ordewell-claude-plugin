@@ -2,7 +2,7 @@
 description: Run the Ordewell plan you reviewed. Its tasks run side by side, each in its own agent session on its own git worktree, and nothing is merged into your branch.
 argument-hint: [session-id]
 disable-model-invocation: true
-allowed-tools: Bash(command -v ordewell) Bash(ordewell --version) Bash(env -u CLAUDECODE -u CLAUDE_CODE_SESSION_ID -u CLAUDE_CODE_MESSAGING_SOCKET -u CLAUDE_CODE_MESSAGING_TOKEN -u CLAUDE_CODE_CHILD_SESSION -u CLAUDE_CODE_CHILD_NOTES_DIR -u CLAUDE_CODE_ENTRYPOINT -u CLAUDE_CODE_EXECPATH -u CLAUDE_CODE_SESSION_ATTENDED -u CLAUDE_EFFORT -u CLAUDE_PID ordewell web --daemon) Bash(ordewell status) Bash(ordewell status *) Bash(ordewell merge review) Bash(ordewell merge review *) Bash(~/.local/bin/ordewell --version) Bash(env -u CLAUDECODE -u CLAUDE_CODE_SESSION_ID -u CLAUDE_CODE_MESSAGING_SOCKET -u CLAUDE_CODE_MESSAGING_TOKEN -u CLAUDE_CODE_CHILD_SESSION -u CLAUDE_CODE_CHILD_NOTES_DIR -u CLAUDE_CODE_ENTRYPOINT -u CLAUDE_CODE_EXECPATH -u CLAUDE_CODE_SESSION_ATTENDED -u CLAUDE_EFFORT -u CLAUDE_PID ~/.local/bin/ordewell web --daemon) Bash(~/.local/bin/ordewell status) Bash(~/.local/bin/ordewell status *) Bash(~/.local/bin/ordewell merge review) Bash(~/.local/bin/ordewell merge review *)
+allowed-tools: Bash(command -v ordewell) Bash(ordewell --version) Bash(env -u CLAUDECODE -u CLAUDE_CODE_SESSION_ID -u CLAUDE_CODE_MESSAGING_SOCKET -u CLAUDE_CODE_MESSAGING_TOKEN -u CLAUDE_CODE_CHILD_SESSION -u CLAUDE_CODE_CHILD_NOTES_DIR -u CLAUDE_CODE_ENTRYPOINT -u CLAUDE_CODE_EXECPATH -u CLAUDE_CODE_SESSION_ATTENDED -u CLAUDE_EFFORT -u CLAUDE_PID ordewell status) Bash(ordewell status) Bash(ordewell status *) Bash(ordewell merge review) Bash(ordewell merge review *) Bash(~/.local/bin/ordewell --version) Bash(env -u CLAUDECODE -u CLAUDE_CODE_SESSION_ID -u CLAUDE_CODE_MESSAGING_SOCKET -u CLAUDE_CODE_MESSAGING_TOKEN -u CLAUDE_CODE_CHILD_SESSION -u CLAUDE_CODE_CHILD_NOTES_DIR -u CLAUDE_CODE_ENTRYPOINT -u CLAUDE_CODE_EXECPATH -u CLAUDE_CODE_SESSION_ATTENDED -u CLAUDE_EFFORT -u CLAUDE_PID ~/.local/bin/ordewell status) Bash(~/.local/bin/ordewell status) Bash(~/.local/bin/ordewell status *) Bash(~/.local/bin/ordewell merge review) Bash(~/.local/bin/ordewell merge review *)
 ---
 
 # Run an Ordewell plan
@@ -31,10 +31,10 @@ Run `command -v ordewell`. If it prints a path, write `ordewell` in every comman
 First run this, exactly as written, with `~/.local/bin/ordewell` in place of `ordewell` if step 1 chose it:
 
 ```
-env -u CLAUDECODE -u CLAUDE_CODE_SESSION_ID -u CLAUDE_CODE_MESSAGING_SOCKET -u CLAUDE_CODE_MESSAGING_TOKEN -u CLAUDE_CODE_CHILD_SESSION -u CLAUDE_CODE_CHILD_NOTES_DIR -u CLAUDE_CODE_ENTRYPOINT -u CLAUDE_CODE_EXECPATH -u CLAUDE_CODE_SESSION_ATTENDED -u CLAUDE_EFFORT -u CLAUDE_PID ordewell web --daemon
+env -u CLAUDECODE -u CLAUDE_CODE_SESSION_ID -u CLAUDE_CODE_MESSAGING_SOCKET -u CLAUDE_CODE_MESSAGING_TOKEN -u CLAUDE_CODE_CHILD_SESSION -u CLAUDE_CODE_CHILD_NOTES_DIR -u CLAUDE_CODE_ENTRYPOINT -u CLAUDE_CODE_EXECPATH -u CLAUDE_CODE_SESSION_ATTENDED -u CLAUDE_EFFORT -u CLAUDE_PID ordewell status
 ```
 
-It starts Ordewell's local server if it isn't running, or prints "Server already running" and leaves the running one as it is. The server passes its environment on to the task sessions it starts, and `env -u` keeps this Claude Code session's own variables, its session id and its messaging socket and token among them, out of it. Don't run it any other way, and don't print or show the environment. Run it alone, and wait for it to finish before any other `ordewell` command: an `ordewell` command run beside it may start the server itself, with this session's variables.
+It is the first command here that talks to Ordewell's local server, and it only reads: it lists the sessions in this folder. If no server is running, it starts one. If the one running was left by an older Ordewell, as after an upgrade, and is idle, it stops it and starts one for this version, and says so in a line that starts "Stopped the idle server": pass that line on to the user. A server of this version is left as it is. The server passes its environment on to the task sessions it starts, and `env -u` keeps this Claude Code session's own variables, its session id and its messaging socket and token among them, out of it. Don't run it any other way, and don't print or show the environment. Run it alone, and wait for it to finish before any other `ordewell` command: any `ordewell` command that talks to the server can start or replace it too, and one run beside it would do that with this session's variables. If it fails, for example because the server left by an older Ordewell has work under way, show the error lines as printed and stop.
 
 Then run this in the foreground with the Bash tool's longest timeout, 600000 milliseconds:
 
@@ -46,7 +46,7 @@ Pass `--session-id` only when a session was given above. The command prints whic
 
 If it stops before starting because the working tree has uncommitted changes ("Nothing was started. Re-run with `--stash`..."), tell the user. Offer `ordewell run --unattended --stash`, which stashes the tracked changes first, and run it only if they agree. Don't use `--without-isolation` unless the user asks for it.
 
-If it can't write to `~/.ordewell` or reach `127.0.0.1` while Claude Code's sandbox is on, tell the user to add `"excludedCommands": ["ordewell *"]` to the `sandbox` block of their Claude Code settings, or to run the command in their own terminal. Don't retry it outside the sandbox yourself.
+If it can't write to `~/.ordewell` or reach `127.0.0.1` while Claude Code's sandbox is on, tell the user to add `"excludedCommands": ["ordewell *", "~/.local/bin/ordewell *"]` to the `sandbox` block of their Claude Code settings, or to run the command in their own terminal. Claude Code matches these against the command as written, so the second is the one that covers `~/.local/bin/ordewell`, the form step 1 chose when that folder isn't on PATH. Don't retry it outside the sandbox yourself.
 
 ## 3. Report the outcome
 
@@ -56,6 +56,8 @@ Report from the output, not from what you expect it to say. The exit status mean
 - `2`: a task failed or is blocked.
 - `3`: the run waits on a person, such as a checkpoint, an input, an approval or a task on hold. Ordewell keeps the run as it is: nothing was answered, stopped or skipped.
 - `1`: the command itself failed: no server, a lost connection, or a refused start.
+
+In every command below, `<n>` is the task's order number. Before you name one, run `ordewell status --session-id <id>`, with the session the run printed: each task's line starts with its number and a `.`, such as `2.` or, for a subtask, `2.1.`. Write that number into each command you give the user or run, as in `ordewell retry 2`: never leave `<n>` in it. The run's lines for a task's progress label it `#` and the last four characters of its id, such as `#be4c`, and `ordewell status` shows the last eight in brackets. These commands accept neither, so never write either into one. A command that the run prints on a line about a wait, such as `ordewell checkpoint 2 approve|reject [reason]`, already names the task in a form these commands accept.
 
 For `0` or `2`, give the `Done.` line with its counts, each failed or blocked task with the reason as printed, and the `Run finished on <branch>` line.
 

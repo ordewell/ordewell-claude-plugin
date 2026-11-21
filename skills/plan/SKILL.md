@@ -2,7 +2,7 @@
 description: Turn one goal into an Ordewell plan you review before anything runs. Its tasks can go to Claude Code, Codex, OpenCode or any other coding agent you have installed.
 argument-hint: <goal>
 disable-model-invocation: true
-allowed-tools: Bash(command -v ordewell) Bash(git rev-parse --is-inside-work-tree) Bash(ordewell --version) Bash(env -u CLAUDECODE -u CLAUDE_CODE_SESSION_ID -u CLAUDE_CODE_MESSAGING_SOCKET -u CLAUDE_CODE_MESSAGING_TOKEN -u CLAUDE_CODE_CHILD_SESSION -u CLAUDE_CODE_CHILD_NOTES_DIR -u CLAUDE_CODE_ENTRYPOINT -u CLAUDE_CODE_EXECPATH -u CLAUDE_CODE_SESSION_ATTENDED -u CLAUDE_EFFORT -u CLAUDE_PID ordewell web --daemon) Bash(ordewell planner) Bash(ordewell runners) Bash(ordewell status) Bash(ordewell status *) Bash(~/.local/bin/ordewell --version) Bash(env -u CLAUDECODE -u CLAUDE_CODE_SESSION_ID -u CLAUDE_CODE_MESSAGING_SOCKET -u CLAUDE_CODE_MESSAGING_TOKEN -u CLAUDE_CODE_CHILD_SESSION -u CLAUDE_CODE_CHILD_NOTES_DIR -u CLAUDE_CODE_ENTRYPOINT -u CLAUDE_CODE_EXECPATH -u CLAUDE_CODE_SESSION_ATTENDED -u CLAUDE_EFFORT -u CLAUDE_PID ~/.local/bin/ordewell web --daemon) Bash(~/.local/bin/ordewell planner) Bash(~/.local/bin/ordewell runners) Bash(~/.local/bin/ordewell status) Bash(~/.local/bin/ordewell status *)
+allowed-tools: Bash(command -v ordewell) Bash(git rev-parse --is-inside-work-tree) Bash(ordewell --version) Bash(env -u CLAUDECODE -u CLAUDE_CODE_SESSION_ID -u CLAUDE_CODE_MESSAGING_SOCKET -u CLAUDE_CODE_MESSAGING_TOKEN -u CLAUDE_CODE_CHILD_SESSION -u CLAUDE_CODE_CHILD_NOTES_DIR -u CLAUDE_CODE_ENTRYPOINT -u CLAUDE_CODE_EXECPATH -u CLAUDE_CODE_SESSION_ATTENDED -u CLAUDE_EFFORT -u CLAUDE_PID ordewell planner) Bash(ordewell runners) Bash(ordewell status) Bash(ordewell status *) Bash(~/.local/bin/ordewell --version) Bash(env -u CLAUDECODE -u CLAUDE_CODE_SESSION_ID -u CLAUDE_CODE_MESSAGING_SOCKET -u CLAUDE_CODE_MESSAGING_TOKEN -u CLAUDE_CODE_CHILD_SESSION -u CLAUDE_CODE_CHILD_NOTES_DIR -u CLAUDE_CODE_ENTRYPOINT -u CLAUDE_CODE_EXECPATH -u CLAUDE_CODE_SESSION_ATTENDED -u CLAUDE_EFFORT -u CLAUDE_PID ~/.local/bin/ordewell planner) Bash(~/.local/bin/ordewell runners) Bash(~/.local/bin/ordewell status) Bash(~/.local/bin/ordewell status *)
 ---
 
 # Plan a goal with Ordewell
@@ -48,12 +48,12 @@ Ask whether to run it, then stop until the user answers. Run it only if they agr
 Run this, exactly as written, with `~/.local/bin/ordewell` in place of `ordewell` if step 1 chose it:
 
 ```
-env -u CLAUDECODE -u CLAUDE_CODE_SESSION_ID -u CLAUDE_CODE_MESSAGING_SOCKET -u CLAUDE_CODE_MESSAGING_TOKEN -u CLAUDE_CODE_CHILD_SESSION -u CLAUDE_CODE_CHILD_NOTES_DIR -u CLAUDE_CODE_ENTRYPOINT -u CLAUDE_CODE_EXECPATH -u CLAUDE_CODE_SESSION_ATTENDED -u CLAUDE_EFFORT -u CLAUDE_PID ordewell web --daemon
+env -u CLAUDECODE -u CLAUDE_CODE_SESSION_ID -u CLAUDE_CODE_MESSAGING_SOCKET -u CLAUDE_CODE_MESSAGING_TOKEN -u CLAUDE_CODE_CHILD_SESSION -u CLAUDE_CODE_CHILD_NOTES_DIR -u CLAUDE_CODE_ENTRYPOINT -u CLAUDE_CODE_EXECPATH -u CLAUDE_CODE_SESSION_ATTENDED -u CLAUDE_EFFORT -u CLAUDE_PID ordewell planner
 ```
 
-It starts Ordewell's local server, or prints "Server already running" and leaves the running one as it is. The server passes its environment on to every agent session it starts, for planning and for tasks, in this session and later ones. `env -u` keeps this Claude Code session's own variables, its session id and its messaging socket and token among them, out of that environment. Don't run it any other way, and don't print or show the environment. Run it alone, and wait for it to finish before any other `ordewell` command: an `ordewell` command run beside it may start the server itself, with this session's variables.
+It is the first command here that talks to Ordewell's local server. If no server is running, it starts one. If the one running was left by an older Ordewell, as after an upgrade, and is idle, it stops it and starts one for this version, and says so in a line that starts "Stopped the idle server": pass that line on to the user. A server of this version is left as it is. The server passes its environment on to every agent session it starts, for planning and for tasks, in this session and later ones. `env -u` keeps this Claude Code session's own variables, its session id and its messaging socket and token among them, out of that environment. Don't run it any other way, and don't print or show the environment. Run it alone, and wait for it to finish before any other `ordewell` command: any `ordewell` command that talks to the server can start or replace it too, and one run beside it would do that with this session's variables. If it fails, for example because the server left by an older Ordewell has work under way, show the error lines as printed and stop.
 
-Then run `ordewell planner`. It lists everything that can plan, and `*` marks the current choice.
+Its output lists everything that can plan, and `*` marks the current choice.
 
 - If one is marked, keep it, and tell the user which one will plan.
 - If none is marked, tell the user that Ordewell will plan with Claude Code on their own login, with no API key, and run `ordewell planner claude-code`. It saves that choice in Ordewell's settings.
@@ -104,7 +104,7 @@ If the command fails, show the error lines as printed, then the agents line from
 
 - "No runner is enabled", or an unknown runner: show the output of `ordewell runners`.
 - "Not logged in", or another sign-in error: the user signs in to that agent and runs `/ordewell:plan` again.
-- The command can't write to `~/.ordewell`, can't reach `127.0.0.1`, or the Ordewell server doesn't start, while Claude Code's sandbox is on: Ordewell starts agent sessions of its own, which can't work inside the sandbox. Tell the user to add `"excludedCommands": ["ordewell *"]` to the `sandbox` block of their Claude Code settings, or to run the command in their own terminal. Don't retry it outside the sandbox yourself.
+- The command can't write to `~/.ordewell`, can't reach `127.0.0.1`, or the Ordewell server doesn't start, while Claude Code's sandbox is on: Ordewell starts agent sessions of its own, which can't work inside the sandbox. Tell the user to add `"excludedCommands": ["ordewell *", "~/.local/bin/ordewell *"]` to the `sandbox` block of their Claude Code settings, or to run the command in their own terminal. Claude Code matches these against the command as written, so the second is the one that covers `~/.local/bin/ordewell`, the form step 1 chose when that folder isn't on PATH. Don't retry it outside the sandbox yourself.
 
 ## 6. Show the plan
 
