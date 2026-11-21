@@ -1,0 +1,15 @@
+{
+  "name": "ordewell",
+  "owner": {
+    "name": "Alessandro Costanzo Ciano",
+    "url": "https://ordewell.ai"
+  },
+  "description": "The Ordewell plugin for Claude Code: plan one goal, then run its tasks on Claude Code, Codex, OpenCode and the other coding agents you have.",
+  "plugins": [
+    {
+      "name": "ordewell",
+      "source": "./",
+      "category": "development"
+    }
+  ]
+}

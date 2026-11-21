@@ -1,0 +1,32 @@
+{
+  "name": "ordewell",
+  "displayName": "Ordewell",
+  "version": "0.1.0",
+  "description": "Give Codex, OpenCode and Claude Code tasks from one plan. Type a goal, review the task graph Ordewell writes, then run its tasks side by side, each on its own git worktree, and each passing only on evidence.",
+  "author": {
+    "name": "Alessandro Costanzo Ciano",
+    "url": "https://ordewell.ai"
+  },
+  "homepage": "https://ordewell.ai",
+  "repository": "https://github.com/ordewell/ordewell-claude-plugin",
+  "license": "Apache-2.0",
+  "keywords": [
+    "orchestration",
+    "planning",
+    "codex",
+    "opencode",
+    "parallel",
+    "worktrees",
+    "coding-agents"
+  ],
+  "icon": "./assets/ordewell-icon.png",
+  "documentationUrl": "https://github.com/ordewell/ordewell-claude-plugin#readme",
+  "supportUrl": "https://github.com/ordewell/ordewell-claude-plugin/issues",
+  "network": {
+    "hosts": [
+      "ordewell.ai",
+      "github.com",
+      "registry.npmjs.org"
+    ]
+  }
+}
