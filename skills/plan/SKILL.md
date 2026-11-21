@@ -33,7 +33,7 @@ If the goal is empty, ask the user for one and stop.
 
 Run `command -v ordewell`. If it prints a path, write `ordewell` in every command below.
 
-If it prints nothing, run `test -x ~/.local/bin/ordewell && echo found`. If that prints `found`, Ordewell is installed where its installer puts it, but that folder isn't on this session's PATH. Use `~/.local/bin/ordewell` in place of `ordewell` below, and tell the user to add `~/.local/bin` to their PATH and restart Claude Code, so that the commands this plugin lists as read-only stop asking for approval.
+If it prints nothing, run `test -x ~/.local/bin/ordewell && echo found`. If that prints `found`, Ordewell is installed where its installer puts it, but that folder isn't on this session's PATH. Use `~/.local/bin/ordewell` in place of `ordewell` below, and tell the user to add `~/.local/bin` to their PATH and restart Claude Code, so that `ordewell` runs by its name.
 
 If neither finds it, Ordewell isn't installed. Say so, and offer to install the latest release the one way that fits this machine:
 
