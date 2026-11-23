@@ -1,7 +1,7 @@
 {
   "name": "ordewell",
   "displayName": "Ordewell",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Give Codex, OpenCode and Claude Code tasks from one plan. Type a goal, review the task graph Ordewell writes, then run its tasks side by side, each on its own git worktree, and each passing only on evidence.",
   "author": {
     "name": "Alessandro Costanzo Ciano",
