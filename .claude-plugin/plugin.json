@@ -21,12 +21,5 @@
   ],
   "icon": "./assets/ordewell-icon.png",
   "documentationUrl": "https://github.com/ordewell/ordewell-claude-plugin#readme",
-  "supportUrl": "https://github.com/ordewell/ordewell-claude-plugin/issues",
-  "network": {
-    "hosts": [
-      "ordewell.ai",
-      "github.com",
-      "registry.npmjs.org"
-    ]
-  }
+  "supportUrl": "https://github.com/ordewell/ordewell-claude-plugin/issues"
 }
