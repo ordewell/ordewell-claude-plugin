@@ -21,7 +21,7 @@ These hold for every step:
   - `ordewell planner`: to list what can plan. It starts Ordewell's local server if none is running. If no planner is chosen yet, `ordewell planner claude-code` saves Claude Code as the planner in Ordewell's settings;
   - `git rev-parse --is-inside-work-tree`: to tell whether this folder is a git repository;
   - `ordewell runners`: to list the coding agents, and whether each is signed in;
-  - `ordewell plan --goal="..." --no-chat`: to start Ordewell's planner, a session of a coding agent that reads the repository, changes nothing in it, and writes the plan;
+  - `ordewell plan --goal="..." --no-chat`: to start Ordewell's planner, a session of a coding agent that reads the repository, changes nothing in it, and writes the plan. If the goal has a line break in it, say also that Claude Code asks for this command every time, even when the user's settings allow `ordewell plan`, and refuses it where it can't ask, such as in `claude -p`: it can't check a command with a line break in an argument against those settings. To plan without that, the user writes the goal in a file in the project and types `/ordewell:plan follow the instructions in <that file>`;
   - `ordewell status --session-id <id> --output .ordewell/plugin-plan-<id>.json`: to save the plan as JSON in Ordewell's own folder, so that you can read which agent runs each task, and, if this session has no Grep tool, `grep` on that file, which only reads.
 
   Then run them one at a time, as the steps say.
@@ -77,6 +77,8 @@ Note, for step 6, this line, filled in from the list and your choice, with `none
 
 > Agents this plan may use: <names>. Not signed in, left out: <names>. Installed but off: <names>.
 
+"Not signed in, left out" names every enabled agent that `ordewell runners` reports as not signed in, even one the goal leaves out anyway, as "Claude Code only" leaves out Codex. Write `none` there only when no enabled agent is reported as not signed in.
+
 You may also write it before you start the planner, but step 6 writes it in any case.
 
 ## 5. Run the planner
@@ -88,6 +90,7 @@ ordewell plan --goal="<the goal>" --no-chat [--runner <id> ...]
 ```
 
 - Pass the goal as one shell argument joined to `--goal` by `=`, with no space, so that a goal which reads like a flag, such as `--yes`, is still taken as the goal. Escape any `"`, `$`, `\` or backtick in it. Copy the goal whole: don't shorten it, drop repeated text or reword it.
+- If the goal has line breaks, keep them inside the quotes: joining the lines changes the goal. Don't write it as `$'...'` either, which Claude Code also refuses to check. Claude Code asks for this command each time, as the notice before your first command said. If it is refused, follow the refusal rule above, and give the user the file route too: write the goal in a file in the project, then type `/ordewell:plan follow the instructions in <that file>`.
 - You retype the goal into the command, and a long goal can lose words on the way. If it is longer than about 1,000 characters, or repeats a sentence several times, the comparison below says so.
 - `--no-chat` asks for the plan in one pass: with no terminal, the planner can't ask the user questions, so it records its assumptions in the plan instead.
 - When the planner asks to run a command, fetch a page or search the web, the CLI answers no and prints "Denied: no interactive terminal" or "Auto-denied". That is expected and the plan is still made. Don't run it again with `--yes`.

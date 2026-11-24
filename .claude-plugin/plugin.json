@@ -21,5 +21,6 @@
   ],
   "icon": "./assets/ordewell-icon.png",
   "documentationUrl": "https://github.com/ordewell/ordewell-claude-plugin#readme",
-  "supportUrl": "https://github.com/ordewell/ordewell-claude-plugin/issues"
+  "supportUrl": "https://github.com/ordewell/ordewell-claude-plugin/issues",
+  "privacyPolicyUrl": "https://ordewell.ai/docs#privacy"
 }
